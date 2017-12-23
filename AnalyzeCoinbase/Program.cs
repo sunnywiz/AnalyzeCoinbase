@@ -25,7 +25,7 @@ namespace AnalyzeCoinbase
 
                 var taxes = ReadCoinbaseTaxFile(TaxesFile);
 
-                var outputRecords = CookRecords(transactions);
+                var outputRecords = CookRecords(transactions,taxes);
 
                 WriteOutputFile(outputRecords);
             }
@@ -89,7 +89,7 @@ namespace AnalyzeCoinbase
         }
 
 
-        private static List<MyOutputRecord> CookRecords(List<CoinbaseTransactionFileRecord> coinbaseRecords)
+        private static List<MyOutputRecord> CookRecords(List<CoinbaseTransactionFileRecord> coinbaseRecords, List<CoinbaseTaxFileRecord> taxes)
         {
             var current = new MyOutputRecord()
             {
@@ -111,6 +111,7 @@ namespace AnalyzeCoinbase
 
                 if (cr.TransferTotal.HasValue && cr.TransferFee.HasValue)
                 {
+                    // we talked directly to our bank... 
                     if (sign == 1)
                     {
                         // bought crypto -- lost from bank that got converted
@@ -123,6 +124,15 @@ namespace AnalyzeCoinbase
                         // sold crypto -- something got to bank
                         r.ToBank = cr.TransferTotal.Value;
                         r.ToFee = cr.TransferFee.Value;
+                    }
+                }
+                else if (!String.IsNullOrWhiteSpace(cr.CoinbaseID))
+                {
+                    // there was a transaction done of some sort... 
+                    var goodsValue = taxes.Where(t => t.SentTransactionID == cr.CoinbaseID).Sum(t => t.SentTotal);
+                    if (goodsValue.HasValue)
+                    {
+                        r.ToGoods = goodsValue.Value; 
                     }
                 }
 
