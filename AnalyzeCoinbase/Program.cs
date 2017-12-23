@@ -11,24 +11,23 @@ namespace AnalyzeCoinbase
     class Program
     {
         private const string TransactionsFile = "Coinbase-54c962face4355ecd0000004-Transactions-Report-2017-12-21-00_57_59.csv";
+        private const string TaxesFile = "Coinbase-54c962face4355ecd0000004-Taxes-Report-2017-12-18-16_16_37.csv";
         private const string OutputFile = "AnalyzeCoinbaseOutput.csv";
 
         static void Main(string[] args)
         {
             try
             {
-                using (var streamReader = new StreamReader(TransactionsFile))
-                using (var streamWriter = new StreamWriter(OutputFile, false))
-                using (var csvReader = new CsvReader(streamReader))
-                using (var csvWriter = new CsvWriter(streamWriter))
-                {
-                    csvReader.Configuration.RegisterClassMap<CoinbaseTransactionFileRecordMap>();
-                    ReadUntilHeader(csvReader);
-                    var coinbaseRecords = csvReader.GetRecords<CoinbaseTransactionFileRecord>().OrderBy(x=>x.Timestamp).ToList();
-                    if (coinbaseRecords.Count == 0) throw new NotSupportedException("must be at least one transaction");
-                    var outputRecords = CookRecords(coinbaseRecords);
-                    csvWriter.WriteRecords(outputRecords); 
-                }
+                var transactions = ReadCoinbaseTransactions(TransactionsFile);
+
+                if (transactions.Count == 0)
+                    throw new NotSupportedException("must be at least one transaction");
+
+                var taxes = ReadCoinbaseTaxFile(TaxesFile);
+
+                var outputRecords = CookRecords(transactions);
+
+                WriteOutputFile(outputRecords);
             }
             catch (Exception ex)
             {
@@ -39,6 +38,56 @@ namespace AnalyzeCoinbase
                 Console.WriteLine("Done");
             }
         }
+
+        private static void WriteOutputFile(List<MyOutputRecord> outputRecords)
+        {
+            using (var outputStreamWriter = new StreamWriter(OutputFile, false))
+            using (var csvOutputWriter = new CsvWriter(outputStreamWriter))
+            {
+                csvOutputWriter.WriteRecords(outputRecords);
+            }
+        }
+
+        private static List<CoinbaseTransactionFileRecord> ReadCoinbaseTransactions(string fileName)
+        {
+            using (var sr = new StreamReader(fileName))
+            using (var csv = new CsvReader(sr))
+            {
+                csv.Configuration.RegisterClassMap<CoinbaseTransactionFileRecordMap>();
+                while (csv.Read())
+                {
+                    if (csv.GetField<string>(0) == "Timestamp")
+                    {
+                        if (!csv.ReadHeader()) throw new NotSupportedException("??");
+                        var records = csv.GetRecords<CoinbaseTransactionFileRecord>()
+                            .OrderBy(x => x.Timestamp).ToList();
+                        return records;
+                    }
+                }
+                throw new NotSupportedException("Could not find header");
+            }
+        }
+
+        private static List<CoinbaseTaxFileRecord> ReadCoinbaseTaxFile(string fileName)
+        {
+            using (var sr = new StreamReader(fileName))
+            using (var csv = new CsvReader(sr))
+            {
+                csv.Configuration.RegisterClassMap<CoinbaseTaxFileRecordMap>();
+                while (csv.Read())
+                {
+                    if (csv.GetField<string>(0) == "Received Transaction ID")
+                    {
+                        if (!csv.ReadHeader()) throw new NotSupportedException("??");
+                        var records = csv.GetRecords<CoinbaseTaxFileRecord>()
+                            .OrderBy(x => x.SentDate).ToList();
+                        return records;
+                    }
+                }
+                throw new NotSupportedException("Could not find header");
+            }
+        }
+
 
         private static List<MyOutputRecord> CookRecords(List<CoinbaseTransactionFileRecord> coinbaseRecords)
         {
@@ -52,13 +101,13 @@ namespace AnalyzeCoinbase
             var outputRecords = new List<MyOutputRecord>();
             foreach (var cr in coinbaseRecords)
             {
-                var r = new MyOutputRecord() {Timestamp = cr.Timestamp};
+                var r = new MyOutputRecord() { Timestamp = cr.Timestamp };
 
-                var sign = Math.Sign(cr.Amount??0m);
+                var sign = Math.Sign(cr.Amount ?? 0m);
                 // + = bought crypto
                 // - = sold crypto; got bank
 
-                r.ToCrypto = cr.Amount??0m;
+                r.ToCrypto = cr.Amount ?? 0m;
 
                 if (cr.TransferTotal.HasValue && cr.TransferFee.HasValue)
                 {
@@ -67,12 +116,13 @@ namespace AnalyzeCoinbase
                         // bought crypto -- lost from bank that got converted
                         r.ToBank = -sign * (cr.TransferTotal.Value - cr.TransferFee.Value);
                         // but the fees just rack up
-                        r.ToFee = cr.TransferFee.Value; 
-                    } else if (sign == -1)
+                        r.ToFee = cr.TransferFee.Value;
+                    }
+                    else if (sign == -1)
                     {
                         // sold crypto -- something got to bank
                         r.ToBank = cr.TransferTotal.Value;
-                        r.ToFee = cr.TransferFee.Value; 
+                        r.ToFee = cr.TransferFee.Value;
                     }
                 }
 
@@ -87,17 +137,5 @@ namespace AnalyzeCoinbase
             return outputRecords;
         }
 
-        private static void ReadUntilHeader(CsvReader csv)
-        {
-            while (csv.Read())
-            {
-                if (csv.GetField<string>(0) == "Timestamp")
-                {
-                    if (!csv.ReadHeader()) throw new NotSupportedException("??");
-                    return;
-                }
-            }
-            throw new NotSupportedException("Could not find header");
-        }
     }
 }

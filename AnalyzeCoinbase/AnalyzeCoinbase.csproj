@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CoinbaseTaxFileRecord.cs" />
     <Compile Include="CoinbaseTransactionFileRecord.cs" />
     <Compile Include="MyOutputRecord.cs" />
     <Compile Include="Program.cs" />
@@ -52,6 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Coinbase-54c962face4355ecd0000004-Taxes-Report-2017-12-18-16_16_37.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Coinbase-54c962face4355ecd0000004-Transactions-Report-2017-12-21-00_57_59.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
