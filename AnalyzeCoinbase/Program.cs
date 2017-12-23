@@ -10,8 +10,8 @@ namespace AnalyzeCoinbase
 {
     class Program
     {
-        private const string TransactionsFile = "Coinbase-54c962face4355ecd0000004-Transactions-Report-2017-12-21-00_57_59.csv";
-        private const string TaxesFile = "Coinbase-54c962face4355ecd0000004-Taxes-Report-2017-12-18-16_16_37.csv";
+        private const string TransactionsFile = "..\\..\\Coinbase-581e33e4823fa908c4fe94e4-Transactions-Report-2017-12-23-18_31_53.csv";
+        private const string TaxesFile = "Coinbase-58122bbb2f0c050117b18a2c-Taxes-Report-2017-12-18-16_17_13.csv";
         private const string OutputFile = "AnalyzeCoinbaseOutput.csv";
 
         static void Main(string[] args)

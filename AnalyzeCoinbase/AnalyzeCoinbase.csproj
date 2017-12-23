@@ -59,6 +59,12 @@
     <None Include="Coinbase-54c962face4355ecd0000004-Transactions-Report-2017-12-21-00_57_59.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Coinbase-58122bbb2f0c050117b18a2c-Taxes-Report-2017-12-18-16_17_13.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Coinbase-58122bbb2f0c050117b18a2c-Transactions-Report-2017-12-23-17_48_33.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
