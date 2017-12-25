@@ -8,10 +8,11 @@ namespace AnalyzeCoinbase
         public DateTime Timestamp { get; set; }
         public decimal? Balance { get; set; }
         public decimal? Amount { get; set; }
+        public string Currency { get; set; }
+        public string To { get; set; }
         public decimal? TransferTotal { get; set; }
         public decimal? TransferFee { get; set; }
         public string CoinbaseID { get; set; }
-
     }
 
     public sealed class CoinbaseTransactionFileRecordMap : ClassMap<CoinbaseTransactionFileRecord>
